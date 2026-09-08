@@ -1,0 +1,36 @@
+mkdir Work
+cd Work
+mkdir "Лабораторная работа №1!"
+mkdir "ФИО"
+chmod 772 'Лабораторная работа №1!'
+chmod 700 'ФИО'
+
+touch "Text @1"
+touch "Text \$2"
+touch "Text #3"
+
+echo "Птица говорун отличается умом и сообразительностью!" >> "Text @1"
+echo "Отличается умом, отличается сообразительностью..." >> "Text @1"
+cat "Text @1" > "Text \$2"
+mv "Text \$2" "Лабораторная работа №1!"
+cp "Text @1" "ФИО"
+
+gzip -f 'Text @1' 'Text #3'
+tar -cf MyAchiv 'Text @1.gz' 'Text #3.gz'
+
+gzip -cd 'Text #3.gz' > 'Text #3'
+gzip -cd 'Text @1.gz' | head -n 1 >> 'Text #3'
+echo 'Будь осторожен! Преступник вооружен!' >> 'Text #3'
+
+chmod 700 'ФИО'
+tac 'Text @1' > 'ФИО/Result_one'
+mv 'ФИО/Result_one' 'ФИО/Result_two'
+chmod 500 'ФИО'
+
+cat 'ФИО'/T* > 'Лабораторная работа №1!/Result_3'
+{ uname -a; echo; date; } >> 'Лабораторная работа №1!/Result_3'
+
+mkdir sandbox
+mv Shtyka.asm Shtyka.o a.out c_version.c c_version Disassemble.txt sandbox/
+mkdir Lab_1
+mv sandbox Work Work_files Lab_1/

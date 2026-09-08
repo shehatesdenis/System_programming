@@ -1,0 +1,39 @@
+Reading symbols from c_version...
+(No debugging symbols found in c_version)
+Dump of assembler code for function main:
+   0x0000000100000460 <+0>:	d10083ff	sub	sp, sp, #0x20
+   0x0000000100000464 <+4>:	a9017bfd	stp	x29, x30, [sp, #16]
+   0x0000000100000468 <+8>:	910043fd	add	x29, sp, #0x10
+   0x000000010000046c <+12>:	52800008	mov	w8, #0x0                   	// #0
+   0x0000000100000470 <+16>:	b9000be8	str	w8, [sp, #8]
+   0x0000000100000474 <+20>:	b81fc3bf	stur	wzr, [x29, #-4]
+   0x0000000100000478 <+24>:	90000000	adrp	x0, 0x100000000
+   0x000000010000047c <+28>:	91128000	add	x0, x0, #0x4a0
+   0x0000000100000480 <+32>:	94000005	bl	0x100000494
+   0x0000000100000484 <+36>:	b9400be0	ldr	w0, [sp, #8]
+   0x0000000100000488 <+40>:	a9417bfd	ldp	x29, x30, [sp, #16]
+   0x000000010000048c <+44>:	910083ff	add	sp, sp, #0x20
+   0x0000000100000490 <+48>:	d65f03c0	ret
+End of assembler dump.
+Reading symbols from a.out...
+(No debugging symbols found in a.out)
+Dump of assembler code for function _start:
+   0x08049000 <+0>:	b8 04 00 00 00	mov    $0x4,%eax
+   0x08049005 <+5>:	bb 01 00 00 00	mov    $0x1,%ebx
+   0x0804900a <+10>:	b9 00 a0 04 08	mov    $0x804a000,%ecx
+   0x0804900f <+15>:	ba 07 00 00 00	mov    $0x7,%edx
+   0x08049014 <+20>:	cd 80	int    $0x80
+   0x08049016 <+22>:	b8 04 00 00 00	mov    $0x4,%eax
+   0x0804901b <+27>:	bb 01 00 00 00	mov    $0x1,%ebx
+   0x08049020 <+32>:	b9 08 a0 04 08	mov    $0x804a008,%ecx
+   0x08049025 <+37>:	ba 06 00 00 00	mov    $0x6,%edx
+   0x0804902a <+42>:	cd 80	int    $0x80
+   0x0804902c <+44>:	b8 04 00 00 00	mov    $0x4,%eax
+   0x08049031 <+49>:	bb 01 00 00 00	mov    $0x1,%ebx
+   0x08049036 <+54>:	b9 0f a0 04 08	mov    $0x804a00f,%ecx
+   0x0804903b <+59>:	ba 0e 00 00 00	mov    $0xe,%edx
+   0x08049040 <+64>:	cd 80	int    $0x80
+   0x08049042 <+66>:	b8 01 00 00 00	mov    $0x1,%eax
+   0x08049047 <+71>:	bb 00 00 00 00	mov    $0x0,%ebx
+   0x0804904c <+76>:	cd 80	int    $0x80
+End of assembler dump.
