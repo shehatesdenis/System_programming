@@ -34,3 +34,8 @@ mkdir sandbox
 mv Shtyka.asm Shtyka.o a.out c_version.c c_version Disassemble.txt sandbox/
 mkdir Lab_1
 mv sandbox Work Work_files Lab_1/
+echo -e "Птица говорун отличается умом и сообразительностью!
+Отличается умом, отличается сообразительностью..." > "ФИО/Text @1"
+echo -e "Птица говорун отличается умом и сообразительностью!
+Отличается умом, отличается сообразительностью..." > "Лабораторная работа №1!/Text $2"
+chmod 200 "ФИО"
