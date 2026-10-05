@@ -22,18 +22,19 @@ _start:
     mov rsi, [rsp + 24]
     call parse_integer
     mov [b_value], rax
-    test rax, rax
-    jz .error
 
     mov rsi, [rsp + 32]
     call parse_integer
     mov [c_value], rax
+    test rax, rax
+    jz .error
 
-    mov rax, [c_value]
-    sub rax, [b_value]
-    sub rax, [b_value]
+    mov rax, [a_value]
+    sub rax, [c_value]
+    imul rax, [b_value]
     cqo
-    idiv qword [b_value]
+    idiv qword [c_value]
+    imul rax, [a_value]
     call print_number
 
     xor rdi, rdi

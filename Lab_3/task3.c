@@ -9,13 +9,12 @@ int main(int argc, char *argv[]) {
     long long a = strtoll(argv[1], NULL, 10);
     long long b = strtoll(argv[2], NULL, 10);
     long long c = strtoll(argv[3], NULL, 10);
-    (void)a;
 
-    if (b == 0) {
+    if (c == 0) {
         return 1;
     }
 
-    long long result = ((c - b) - b) / b;
+    long long result = (((a - c) * b) / c) * a;
     printf("%lld\n", result);
     return 0;
 }
