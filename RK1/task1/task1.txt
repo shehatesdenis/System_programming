@@ -1,0 +1,6 @@
+ps aux > sandbox/Task_1
+mkdir -p sandbox/sandbox-2
+mv sandbox/Task_2 sandbox/Task_3 sandbox/sandbox-2/
+cp /bin/ls sandbox/sandbox-2/myls
+chmod 544 sandbox/sandbox-2/myls
+uname -a >> sandbox/Task_3
