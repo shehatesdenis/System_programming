@@ -1,46 +1,48 @@
 format ELF
-public init_array
+public init_queue
 public add_to_end
 public remove_from_start
+public fill_random
 public count_primes
 public get_odds
 public count_ends_with_1
 
 section '.text' executable
 
-init_array:
+extrn malloc
+extrn rand
+
+init_queue:
     push ebp
     mov ebp, esp
+    push ebx
 
-    mov ecx, [ebp+8]     ; initial_capacity
-    mov eax, 8
-    add eax, ecx
-    shl eax, 2          ; total bytes
-    mov ecx, eax        ; len for mmap
+    mov eax, [ebp+8]     ; initial_capacity
+    mov ecx, eax
+    shl ecx, 2
+    add ecx, 8
 
-    mov edx, 3          ; PROT_READ | PROT_WRITE
-    mov esi, 34         ; MAP_PRIVATE | MAP_ANONYMOUS
-    mov edi, -1         ; fd
-    push 0              ; offset
-    mov eax, 90         ; sys_mmap
-    int 0x80
-    add esp, 4          ; clean offset
+    push ecx            ; argument for malloc
+    call malloc
+    add esp, 4
 
-    mov ebx, eax        ; addr of mmap'd region
-    cmp ebx, -1
-    je .error
+    test eax, eax
+    jz .error
 
-    ; Use a safer way to initialize:
+    mov ebx, eax        ; addr of allocated region
     mov dword [ebx], 0       ; size = 0
     mov edx, [ebp+8]
     mov [ebx+4], edx    ; capacity = initial_capacity
 
     mov eax, ebx
+    pop ebx
     mov esp, ebp
     pop ebp
     ret
+
 .error:
-    mov eax, 0
+    xor eax, eax
+    pop ebx
     mov esp, ebp
     pop ebp
     ret
@@ -48,25 +50,23 @@ init_array:
 add_to_end:
     push ebp
     mov ebp, esp
-    mov ebx, [ebp+8]    ; array
-    mov ecx, [ebp+12]    ; value
+    mov ebx, [ebp+8]    ; queue
+    mov ecx, [ebp+12]   ; value
 
     test ebx, ebx
     jz .err
 
-    mov eax, [ebx]      ; current size
+    mov eax, [ebx]      ; size
     mov edx, [ebx+4]    ; capacity
-
     cmp eax, edx
-    jl .store
+    jge .err            ; queue full
 
-.store:
     mov eax, [ebx]
     shl eax, 2
     add eax, 8
     mov [ebx + eax], ecx
     inc dword [ebx]
-    mov eax, 0
+    xor eax, eax        ; return 0 on success
     jmp .done
 .err:
     mov eax, -1
@@ -97,11 +97,35 @@ remove_from_start:
     jl .loop
 
     dec dword [ebx]
-    mov eax, 0
+    xor eax, eax
     jmp .done
 .empty:
     mov eax, -1
 .done:
+    mov esp, ebp
+    pop ebp
+    ret
+
+fill_random:
+    push ebp
+    mov ebp, esp
+    mov ebx, [ebp+8]    ; queue
+
+    test ebx, ebx
+    jz .done
+
+    mov ecx, [ebx+4]    ; use capacity to fill
+    xor edi, edi        ; index
+.loop:
+    cmp edi, ecx
+    jge .done
+    call rand
+    mov [ebx + 8 + edi*4], eax
+    inc edi
+    jmp .loop
+.done:
+    mov dword [ebx], ecx ; update size to capacity
+    xor eax, eax
     mov esp, ebp
     pop ebp
     ret
@@ -118,22 +142,18 @@ count_primes:
 
     mov ecx, [ebx]       ; size
     xor edi, edi        ; index
-
 .next_val:
     cmp edi, ecx
     jge .done
     mov edx, [ebx + 8 + edi*4]
-
     cmp edx, 1
     jle .not_prime
-
     mov esi, 2
 .prime_loop:
     mov eax, esi
     imul eax, eax
     cmp eax, edx
     jg .is_prime
-
     mov eax, edx
     xor edx, edx
     idiv esi
@@ -141,11 +161,9 @@ count_primes:
     je .not_prime
     inc esi
     jmp .prime_loop
-
 .is_prime:
     inc dword [ebp-4]
     jmp .next_val
-
 .not_prime:
     inc edi
     jmp .next_val
@@ -159,7 +177,7 @@ count_primes:
 get_odds:
     push ebp
     mov ebp, esp
-    mov ebx, [ebp+8]    ; array
+    mov ebx, [ebp+8]    ; queue
     mov esi, [ebp+12]   ; out_list
 
     test ebx, ebx
@@ -168,15 +186,12 @@ get_odds:
     mov ecx, [ebx]      ; size
     xor eax, eax        ; count
     xor edi, edi        ; index
-
 .loop:
     cmp edi, ecx
     jge .done
     mov edx, [ebx + 8 + edi*4]
-
     test edx, 1          ; check if odd
     jz .next
-
     mov edx, eax
     shl edx, 2
     mov edi, [ebx + 8 + edi*4]

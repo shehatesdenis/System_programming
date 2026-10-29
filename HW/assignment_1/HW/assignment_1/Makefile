@@ -1,21 +1,13 @@
-CC = gcc
-AS = fasm
-LD = gcc
+all: homework_exe
 
-TARGET = homework_exe
-ASM_OBJ = hw.o
-C_OBJ = main.o
+homework_exe: main.o hw.o
+	gcc -m32 main.o hw.o -o homework_exe
 
-all: $(TARGET)
+main.o: main.c
+	gcc -m32 -c main.c -o main.o
 
-$(TARGET): $(C_OBJ) $(ASM_OBJ)
-	$(LD) -m32 -o $(TARGET) $(C_OBJ) $(ASM_OBJ)
-
-$(C_OBJ): main.c
-	$(CC) -c -m32 main.c -o $(C_OBJ)
-
-$(ASM_OBJ): hw.asm
-	$(AS) hw.asm $(ASM_OBJ)
+hw.o: hw.asm
+	fasm hw.asm hw.o
 
 clean:
-	rm -f $(TARGET) $(C_OBJ) $(ASM_OBJ)
+	rm -f homework_exe main.o hw.o
