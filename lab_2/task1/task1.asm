@@ -3,36 +3,29 @@ public _start
 
 section '.data' writable
     string db 'AMVtdiYVETHnNhuYwnWDVBqL'
+    len = $ - string        ; длина строки (24)
     newline db 0x0A
-
-section '.bss' writable
-    char_buf db 1
 
 section '.text' executable
 _start:
-    mov r12, string
-    mov r13, 23
-    dec r13
+    mov r13, len            ; r13 = 24
 loop_rev:
-    mov al, [r12 + r13]
-    mov [char_buf], al
-
-    mov rax, 1          ; sys_write
-    mov rdi, 1          ; stdout
-    mov rsi, char_buf
-    mov rdx, 1          ; 1 byte
+    dec r13                 ; индекс 23, 22, ... 0
+    lea rsi, [string + r13] ; адрес текущего символа
+    mov rax, 1              ; sys_write
+    mov rdi, 1              ; stdout
+    mov rdx, 1              ; 1 байт
     syscall
 
-    dec r13
-    cmp r13, -1
-    jne loop_rev
+    test r13, r13
+    jnz loop_rev
 
-    mov rax, 1          ; print newline
+    mov rax, 1              ; перевод строки
     mov rdi, 1
     mov rsi, newline
     mov rdx, 1
     syscall
 
-    mov rax, 60         ; sys_exit
+    mov rax, 60             ; sys_exit
     xor rdi, rdi
     syscall
