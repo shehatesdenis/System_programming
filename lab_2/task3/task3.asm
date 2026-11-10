@@ -5,13 +5,13 @@ section '.data' writable
     newline db 0x0A
 
 section '.bss' writable
-    buf rb 66
+    buf rb 45
 
 section '.text' executable
 _start:
     mov rdi, buf
-    mov al, '+'
-    mov rcx, 66
+    mov al, '!'
+    mov rcx, 45
     rep stosb
 
     xor r13, r13            ; сколько символов уже выведено (смещение в buf)
@@ -32,7 +32,7 @@ tri_loop:
     mov rdx, 1
     syscall
 
-    cmp r13, 66
+    cmp r13, 45
     jb tri_loop
 
     mov rax, 60

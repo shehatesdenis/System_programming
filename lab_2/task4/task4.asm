@@ -2,7 +2,7 @@ format ELF64
 public _start
 
 section '.data' writable
-    number dq 5277616985
+    number dq 3363522457
     newline db 0x0A
 
 section '.bss' writable
@@ -20,7 +20,7 @@ sum_loop:
     test rax, rax
     jnz sum_loop
 
-    mov rax, rbx                ; превращаем сумму (56) в текст
+    mov rax, rbx                ; превращаем сумму в текст
     xor r8, r8                  ; r8 = сколько цифр получилось
 convert_loop:
     xor rdx, rdx

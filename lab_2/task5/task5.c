@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 int main() {
-    unsigned long long n = 5277616985ULL;
+    unsigned long long n = 3363522457ULL;
     unsigned long long sum = 0;
     while (n > 0) {
         sum += n % 10;
