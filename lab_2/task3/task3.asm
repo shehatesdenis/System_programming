@@ -2,39 +2,45 @@ format ELF64
 public _start
 
 section '.data' writable
-    newline db 0x0A
+    N = 45
 
-section '.bss' writable
-    buf rb 45
+    buf rb N
+    nl db 10
 
 section '.text' executable
 _start:
-    mov rdi, buf
-    mov al, '!'
-    mov rcx, 45
-    rep stosb
+    lea rdi,[buf]
+    mov al,'!'
+    mov rcx,N
 
-    xor r13, r13            ; сколько символов уже выведено (смещение в buf)
-    xor r12, r12            ; длина текущей строки
-tri_loop:
+.fill:
+    mov [rdi],al
+    inc rdi
+    loop .fill
+
+    xor r13,r13             ; сколько символов уже выведено (смещение в buf)
+    xor r12,r12             ; длина текущей строки
+
+.tri:
     inc r12                 ; 1, 2, 3, ...
-    mov rax, 1
-    mov rdi, 1
-    lea rsi, [buf + r13]    ; продолжаем с того места, где остановились
-    mov rdx, r12
+
+    mov eax,1               ; write(1, buf+r13, r12)
+    mov edi,1
+    lea rsi,[buf+r13]       ; продолжаем с того места, где остановились
+    mov rdx,r12
     syscall
 
-    add r13, r12
+    add r13,r12
 
-    mov rax, 1              ; перевод строки
-    mov rdi, 1
-    mov rsi, newline
-    mov rdx, 1
+    mov eax,1               ; перевод строки
+    mov edi,1
+    lea rsi,[nl]
+    mov edx,1
     syscall
 
-    cmp r13, 45
-    jb tri_loop
+    cmp r13,N
+    jb .tri
 
-    mov rax, 60
-    xor rdi, rdi
+    mov eax,60
+    xor edi,edi
     syscall

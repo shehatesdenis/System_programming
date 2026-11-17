@@ -1,54 +1,46 @@
 format ELF64
+
 public _start
 
-section '.data' writable
-    number dq 3363522457
-    newline db 0x0A
+number dq 3363522457
 
-section '.bss' writable
-    result_buf rb 20            ; 20 байт под цифры результата
+buffer rb 32
 
-section '.text' executable
 _start:
-    mov rax, [number]
-    xor rbx, rbx                ; rbx = сумма цифр
-sum_loop:
-    xor rdx, rdx
-    mov rcx, 10
-    div rcx                     ; rax = частное, rdx = последняя цифра
-    add rbx, rdx
-    test rax, rax
-    jnz sum_loop
+    mov rax,[number]
+    xor r8d,r8d
+    mov ebx,10
 
-    mov rax, rbx                ; превращаем сумму в текст
-    xor r8, r8                  ; r8 = сколько цифр получилось
-convert_loop:
-    xor rdx, rdx
-    mov rcx, 10
-    div rcx
-    add dl, '0'                 ; цифра -> ASCII
-    mov [result_buf + r8], dl
-    inc r8
-    test rax, rax
-    jnz convert_loop
+.sum_loop:
+    xor edx,edx
+    div rbx
+    add r8,rdx
+    test rax,rax
+    jnz .sum_loop
 
-    mov r9, r8
-    dec r9                      ; цифры лежат задом наперёд, печатаем с конца
-print_loop:
-    lea rsi, [result_buf + r9]
-    mov rax, 1                  ; sys_write
-    mov rdi, 1                  ; stdout
-    mov rdx, 1
-    syscall
-    dec r9
-    jge print_loop              ; пока r9 >= 0
+    mov rax,r8
+    lea rdi,[buffer+31]
+    mov byte [rdi],10
+    dec rdi
 
-    mov rax, 1                  ; перевод строки
-    mov rdi, 1
-    mov rsi, newline
-    mov rdx, 1
+.to_ascii:
+    xor edx,edx
+    div rbx
+    add dl,'0'
+    mov [rdi],dl
+    dec rdi
+    test rax,rax
+    jnz .to_ascii
+
+    inc rdi
+    lea rsi,[rdi]
+    lea rdx,[buffer+32]
+    sub rdx,rsi
+
+    mov eax,1
+    mov edi,1
     syscall
 
-    mov rax, 60                 ; sys_exit
-    xor rdi, rdi
+    mov eax,60
+    xor edi,edi
     syscall

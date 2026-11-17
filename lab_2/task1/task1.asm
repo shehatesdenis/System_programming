@@ -3,29 +3,29 @@ public _start
 
 section '.data' writable
     string db 'ywSzWnIvoXjsEqgFRwuyZYQwUGXWv'
-    len = $ - string        ; длина строки (29)
-    newline db 0x0A
+    s_len = $ - string
+
+    buf rb s_len
 
 section '.text' executable
 _start:
-    mov r13, len            ; r13 = 29
-loop_rev:
-    dec r13                 ; индекс 28, 27, ... 0
-    lea rsi, [string + r13] ; адрес текущего символа
-    mov rax, 1              ; sys_write
-    mov rdi, 1              ; stdout
-    mov rdx, 1              ; 1 байт
+    lea rsi,[string]
+    lea rdi,[buf+s_len-1]
+    mov rcx,s_len
+
+.reverse:
+    mov al,[rsi]
+    mov [rdi],al
+    inc rsi
+    dec rdi
+    loop .reverse
+
+    mov eax,1
+    mov edi,1
+    lea rsi,[buf]
+    mov edx,s_len
     syscall
 
-    test r13, r13
-    jnz loop_rev
-
-    mov rax, 1              ; перевод строки
-    mov rdi, 1
-    mov rsi, newline
-    mov rdx, 1
-    syscall
-
-    mov rax, 60             ; sys_exit
-    xor rdi, rdi
+    mov eax,60
+    xor edi,edi
     syscall

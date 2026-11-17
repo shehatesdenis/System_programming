@@ -2,37 +2,50 @@ format ELF64
 public _start
 
 section '.data' writable
-    newline db 0x0A
+    N = 45
+    M = 5
+    K = 9
 
-section '.bss' writable
-    buf rb 45               ; N = 45 байт
+    buf rb N
+    nl db 10
 
 section '.text' executable
 _start:
-    mov rdi, buf            ; заполняем память символом '!'
-    mov al, '!'
-    mov rcx, 45
-    rep stosb
+    lea rdi,[buf]
+    mov al,'!'
+    mov rcx,N
 
-    mov r12, buf            ; указатель на начало текущей строки
-    mov r13, 9              ; K = 9 строк
-row_loop:
-    mov rax, 1
-    mov rdi, 1
-    mov rsi, r12
-    mov rdx, 5              ; M = 5 символов
+.fill:
+    mov [rdi],al
+    inc rdi
+    loop .fill
+
+    lea r12,[buf]           ; указатель на текущий символ
+    mov r13,K               ; счётчик строк
+
+.row:
+    mov r14,M               ; счётчик колонок
+
+.col:
+    mov eax,1               ; write(1, r12, 1) - один символ
+    mov edi,1
+    mov rsi,r12
+    mov edx,1
     syscall
 
-    mov rax, 1              ; перевод строки
-    mov rdi, 1
-    mov rsi, newline
-    mov rdx, 1
+    inc r12                 ; следующий символ в памяти
+    dec r14
+    jnz .col                ; пока не вывели M символов
+
+    mov eax,1               ; перевод строки
+    mov edi,1
+    lea rsi,[nl]
+    mov edx,1
     syscall
 
-    add r12, 5              ; следующая строка в памяти
     dec r13
-    jnz row_loop
+    jnz .row                ; пока не вывели K строк
 
-    mov rax, 60
-    xor rdi, rdi
+    mov eax,60
+    xor edi,edi
     syscall
