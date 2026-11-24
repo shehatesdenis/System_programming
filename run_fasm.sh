@@ -21,25 +21,89 @@ if ! command -v docker >/dev/null 2>&1; then
     exit 1
 fi
 
-if ! docker info >/dev/null 2>&1; then
+DOCKER=(docker)
+SSH=()
+
+run_docker() {
+    if [[ -n "${SSH[0]:-}" ]]; then
+        local remote_command
+        printf -v remote_command '%q ' docker "$@"
+        if [[ "$1" == run && -t 0 && -t 1 ]]; then
+            "${SSH[@]}" -t "lima-colima-$PROFILE" "$remote_command"
+        else
+            "${SSH[@]}" "lima-colima-$PROFILE" "$remote_command"
+        fi
+    else
+        "${DOCKER[@]}" "$@"
+    fi
+}
+
+use_colima_ssh() {
+    local profile="$1"
+    local config="${COLIMA_HOME:-$HOME/.colima}/_lima/colima-$profile/ssh.config"
+    [[ -r "$config" ]] || return 1
+
+    SSH=(ssh -F "$config" -o BatchMode=yes -o ControlMaster=no
+        -o ControlPath=none -o ConnectTimeout=5)
+    if ! "${SSH[@]}" "lima-colima-$profile" 'docker info >/dev/null' </dev/null >/dev/null 2>&1; then
+        SSH=()
+        return 1
+    fi
+}
+
+if [[ "$OS_NAME" == Darwin* && "$(uname -m)" == arm64 ]]; then
+    if ! command -v colima >/dev/null 2>&1 || ! command -v qemu-system-x86_64 >/dev/null 2>&1; then
+        echo "Установите зависимости для GDB: brew install colima qemu lima-additional-guestagents" >&2
+        exit 1
+    fi
+
+    PROFILE="fasm-x86"
+    DOCKER=(docker --context "colima-$PROFILE")
+    if ! run_docker info >/dev/null 2>&1 && ! use_colima_ssh "$PROFILE"; then
+        if guest_agent="$(limactl info --yq '.guestAgents.x86_64.location // ""' 2>/dev/null)" &&
+           [[ -z "$guest_agent" ]]; then
+            echo "Lima не нашла гостевой агент x86-64. Установка: brew install lima-additional-guestagents" >&2
+            exit 1
+        fi
+        colima start "$PROFILE" \
+            --arch x86_64 \
+            --vm-type qemu \
+            --runtime docker \
+            --activate=false \
+            --disk 12 \
+            --mount "$SCRIPT_DIR:w" || {
+            use_colima_ssh "$PROFILE" || exit 1
+        }
+        if ! run_docker info >/dev/null 2>&1; then
+            use_colima_ssh "$PROFILE"
+        fi
+    fi
+
+    case "$(run_docker info --format '{{.Architecture}}')" in
+        x86_64|amd64) ;;
+        *)
+            echo "Ошибка: для отладки Docker должен работать внутри Linux x86-64." >&2
+            exit 1
+            ;;
+    esac
+elif ! "${DOCKER[@]}" info >/dev/null 2>&1; then
     echo "Запуск Docker..."
     if [[ "$OS_NAME" == Darwin* ]]; then
         open -a Docker
     fi
     for _ in {1..60}; do
-        if docker info >/dev/null 2>&1; then break; fi
+        if "${DOCKER[@]}" info >/dev/null 2>&1; then break; fi
         sleep 2
     done
 fi
 
-if ! docker image inspect "$IMAGE_NAME" >/dev/null 2>&1; then
+if ! run_docker image inspect "$IMAGE_NAME" >/dev/null 2>&1; then
     echo "Собираю образ..."
-    docker build \
+    run_docker build \
         --platform linux/amd64 \
         --tag "$IMAGE_NAME" \
-        --file - \
-        "$SCRIPT_DIR" <<'DOCKERFILE'
-FROM --platform=linux/amd64 ubuntu:22.04
+        - <<'DOCKERFILE'
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
@@ -57,15 +121,13 @@ CMD ["/bin/bash"]
 DOCKERFILE
 fi
 
-# Use a more permissive security profile for mmap/syscalls if possible, 
-# but we can't easily change Docker daemon config here.
-# Instead, we ensure we run with a clean volume mapping.
-
-if docker container inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
-    docker rm -f "$CONTAINER_NAME"
+if run_docker container inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
+    run_docker rm -f "$CONTAINER_NAME"
 fi
 
-docker run -it \
+run_docker run -it \
+    --cap-add SYS_PTRACE \
+    --security-opt seccomp=unconfined \
     --name "$CONTAINER_NAME" \
     --platform linux/amd64 \
     --volume "$SCRIPT_DIR:$CONTAINER_WORKDIR" \
