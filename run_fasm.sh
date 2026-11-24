@@ -102,23 +102,7 @@ if ! run_docker image inspect "$IMAGE_NAME" >/dev/null 2>&1; then
     run_docker build \
         --platform linux/amd64 \
         --tag "$IMAGE_NAME" \
-        - <<'DOCKERFILE'
-FROM ubuntu:22.04
-
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y \
-    fasm \
-    gdb \
-    gcc \
-    gcc-multilib \
-    libc6-dev \
-    make \
-    binutils \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /system_programming
-CMD ["/bin/bash"]
-DOCKERFILE
+        - < "$SCRIPT_DIR/Dockerfile"
 fi
 
 if run_docker container inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
