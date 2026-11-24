@@ -24,8 +24,8 @@ exit:
     syscall
 
 print_number:
-    sub rsp, 16
-    lea r9, [rsp + 16]
+    sub rsp, 4
+    lea r9, [rsp + 4]
     mov r8, r9
     dec r8
     mov byte [r8], 10
@@ -47,5 +47,5 @@ print_number:
     sub rdx, r8
     syscall
 
-    add rsp, 16
+    add rsp, 4
     ret
