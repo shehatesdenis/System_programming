@@ -1,13 +1,6 @@
 format ELF64
 public _start
 
-section '.data' writable
-    newline db 10
-
-section '.bss' writable
-    result_buf rb 32
-
-section '.text' executable
 _start:
     cmp qword [rsp], 2
     jne .error
@@ -31,8 +24,11 @@ exit:
     syscall
 
 print_number:
-    mov r8, result_buf + 32
-    mov r9, r8
+    sub rsp, 16
+    lea r9, [rsp + 16]
+    mov r8, r9
+    dec r8
+    mov byte [r8], 10
     mov rcx, 10
 
 .convert:
@@ -51,9 +47,5 @@ print_number:
     sub rdx, r8
     syscall
 
-    mov rax, 1
-    mov rdi, 1
-    mov rsi, newline
-    mov rdx, 1
-    syscall
+    add rsp, 16
     ret
