@@ -1,119 +1,37 @@
-format ELF64 executable 3
-entry _start
+format ELF64
+public _start
 
-segment readable writeable
-prompt db "Enter n: "
-prompt_len = $ - prompt
-result_msg db "Sum: "
-result_len = $ - result_msg
-newline db 10
-input rb 128
-outbuf rb 64
+result_text equ 'Sum: '
 
-segment readable executable
+include 'common.inc'
+
 _start:
-    mov rax, 1
-    mov rdi, 1
-    mov rsi, prompt
-    mov rdx, prompt_len
-    syscall
+    call read_number
+    jc input_error
+    xor r12d, r12d
+    test rax, rax
+    jle .print
 
-    xor eax, eax
-    xor edi, edi
-    mov rsi, input
-    mov edx, 127
-    syscall
-    test rax, rax
-    jle .exit
-    mov byte [input+rax], 0
-    mov rsi, input
-    call parse_int
-    test rax, rax
-    jle .zero
+    ; The magnitude is n(n + 1)/2. Divide the even factor first.
     mov r12, rax
-    xor r13, r13
-    mov r14, 1
-.loop:
-    mov rax, r14
-    imul rax, r14
-    test r14, 1
-    jnz .add
-    neg rax
-.add:
-    add r13, rax
-    inc r14
-    cmp r14, r12
-    jle .loop
-    mov rax, r13
-    call print_result
-    jmp .exit
-.zero:
-    xor eax, eax
-    call print_result
-.exit:
-    mov eax, 60
-    xor edi, edi
-    syscall
+    shr r12, 1
+    test al, 1
+    jnz .odd
+    inc rax
+    imul r12, rax
+    jo input_error
+    neg r12
+    jmp .print
 
-parse_int:
-    xor eax, eax
-    xor r8d, r8d
-    cmp byte [rsi], '-'
-    jne .digits
-    mov r8d, 1
-    inc rsi
-.digits:
-    movzx ecx, byte [rsi]
-    cmp ecx, '0'
-    jb .done
-    cmp ecx, '9'
-    ja .done
-    imul rax, 10
-    sub ecx, '0'
-    add rax, rcx
-    inc rsi
-    jmp .digits
-.done:
-    test r8d, r8d
-    jz .ret
-    neg rax
-.ret:
-    ret
+.odd:
+    inc r12
+    imul r12, rax
+    jo input_error
 
-print_result:
-    mov rbx, rax
-    mov eax, 1
-    mov edi, 1
+.print:
     mov rsi, result_msg
     mov edx, result_len
-    syscall
-    lea rsi, [outbuf+63]
-    mov byte [rsi], 10
-    mov ecx, 1
-    mov rax, rbx
-    xor r8d, r8d
-    test rax, rax
-    jns .convert
-    neg rax
-    mov r8d, 1
-.convert:
-    xor edx, edx
-    mov r9d, 10
-    div r9
-    add dl, '0'
-    dec rsi
-    mov [rsi], dl
-    inc ecx
-    test rax, rax
-    jnz .convert
-    test r8d, r8d
-    jz .write
-    dec rsi
-    mov byte [rsi], '-'
-    inc ecx
-.write:
-    mov eax, 1
-    mov edi, 1
-    mov edx, ecx
-    syscall
-    ret
+    call write_stdout
+    mov rax, r12
+    call print_number
+    jmp finish

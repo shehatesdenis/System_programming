@@ -1,11 +1,12 @@
-#include <stdio.h>
+#include "read_n.h"
 
 int main(void) {
     long long n;
-    if (scanf("%lld", &n) != 1) return 1;
-    long long count = 0;
-    for (long long k = 1; k <= n; ++k)
-        if (k % 11 != 0 && k % 5 != 0) ++count;
+    if (!read_n(&n)) {
+        return 1;
+    }
+
+    long long count = n > 0 ? n - n / 55 : 0;
     printf("Count: %lld\n", count);
     return 0;
 }
